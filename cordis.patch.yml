@@ -1,6 +1,6 @@
 - insert:
     - id: feifan-life
-      name: '@feifan/dsh-feifan-life'
+      name: '@fanfan4589/dsh-feifan-life'
       config:
         dataDir: /Users/feifan/FEIFAN/08-系统/09非凡人生数据
         vaultDir: /Users/feifan/FEIFAN/08-系统/09非凡人生数据

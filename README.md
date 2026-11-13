@@ -1,5 +1,8 @@
 # 非凡人生 · DSH 个人版 0.2.3
 
+[![npm](https://img.shields.io/npm/v/@fanfan4589/dsh-feifan-life)](https://www.npmjs.com/package/@fanfan4589/dsh-feifan-life) [![license](https://img.shields.io/npm/l/@fanfan4589/dsh-feifan-life)](./LICENSE)
+
+
 迁移基准是 `/Users/feifan/FEIFAN/.obsidian/plugins/command-center` 中正在使用的个人版。对应源码为 `/Users/feifan/FEIFAN/01-项目/07obsidian/非凡人生插件`，安装版 main.js 与该源码目录的 build/main.js 已核对一致。
 
 保留总览、任务、规划、财务、清单、习惯、灵感、复盘八个模块，以及湖畔森林／雾山暮色／雪山星空背景、搜索、弹窗、导入导出和任务镜像功能。源文件比对结果见 `_docs/source-parity.json`：52 个原版源码文件中的 45 个逐字节一致，原 CSS 快照保留，DSH 的样式覆盖集中在 `shim/port.css`。

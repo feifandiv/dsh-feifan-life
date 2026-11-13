@@ -1,0 +1,903 @@
+/*
+ * obsidian-base.css — the slice of Obsidian's app.css the browser shim needs.
+ *
+ * The ported plugin was authored against Obsidian, but this build has no
+ * Obsidian app.css. Everything the shim paints itself (modals, menus, setting
+ * rows, notices, inline icons) is styled here with the stock Obsidian look:
+ * neutral charcoal surfaces, 1px borders, 8-12px radii, 13px type.
+ *
+ * Isolation contract:
+ *   - Never touch plugin-owned component classes; only Obsidian primitives.
+ *   - Modals, menus and notices live on <body> as portals. The shim marks each
+ *     portal with data-fl-portal, so every rule below is scoped by that
+ *     attribute (or by #fl-overlay) and cannot leak into the host UI.
+ *   - :where() keeps specificity at the portal attribute itself, so the
+ *     plugin's own stylesheet always wins where it wants to.
+ *   - Theme: data-fl-theme="dark" / "light" on the portal, falling back to
+ *     prefers-color-scheme. No imports, no external images or fonts.
+ */
+
+/* ------------------------------------------------------------------ icons */
+/* Keep icon defaults inside this plugin and its portals. */
+:where(#fl-overlay, [data-fl-portal], .fl-launcher) .svg-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+/* ---------------------------------------------------------- design tokens */
+#fl-overlay,
+[data-fl-portal] {
+  /* dark is the base look */
+  --fob-raw-bg: #1e1e1e;
+  --fob-raw-surface: #2a2a2a;
+  --fob-raw-surface-2: #333333;
+  --fob-raw-surface-3: #3a3a3a;
+  --fob-raw-border: #3a3a3a;
+  --fob-raw-border-strong: #4a4a4a;
+  --fob-raw-text: #dcddde;
+  --fob-raw-text-muted: #a3a3a3;
+  --fob-raw-text-faint: #7c7c7c;
+  --fob-raw-accent: #a882ff;
+  --fob-raw-accent-hover: #b89aff;
+  --fob-raw-accent-soft: rgba(168, 130, 255, 0.22);
+  --fob-raw-on-accent: #ffffff;
+  --fob-raw-danger: #ff6b6b;
+  --fob-raw-danger-soft: rgba(255, 107, 107, 0.14);
+  --fob-raw-hover: #3a3a3a;
+  --fob-raw-field: #222222;
+  --fob-raw-button-bg: #333333;
+  --fob-raw-track: #4a4a4a;
+  --fob-raw-toggle-knob: #f0f0f0;
+  --fob-raw-scrim: rgba(0, 0, 0, 0.62);
+  --fob-raw-shadow: 0 18px 48px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+  font-family: var(--fob-font);
+  font-size: 13px;
+}
+
+@media (prefers-color-scheme: light) {
+  #fl-overlay:not([data-fl-theme="dark"]),
+  [data-fl-portal]:not([data-fl-theme="dark"]) {
+    --fob-raw-bg: #ffffff;
+    --fob-raw-surface: #ffffff;
+    --fob-raw-surface-2: #f5f5f5;
+    --fob-raw-surface-3: #ececec;
+    --fob-raw-border: #e0e0e0;
+    --fob-raw-border-strong: #c8c8c8;
+    --fob-raw-text: #262626;
+    --fob-raw-text-muted: #666666;
+    --fob-raw-text-faint: #8a8a8a;
+    --fob-raw-accent: #8a5cf6;
+    --fob-raw-accent-hover: #7a4ce8;
+    --fob-raw-accent-soft: rgba(138, 92, 246, 0.16);
+    --fob-raw-danger: #c0392b;
+    --fob-raw-danger-soft: rgba(192, 57, 43, 0.1);
+    --fob-raw-hover: #ececec;
+    --fob-raw-field: #ffffff;
+    --fob-raw-button-bg: #f5f5f5;
+    --fob-raw-track: #d2d2d2;
+    --fob-raw-toggle-knob: #ffffff;
+    --fob-raw-scrim: rgba(0, 0, 0, 0.45);
+    --fob-raw-shadow: 0 18px 48px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+    color-scheme: light;
+  }
+}
+
+#fl-overlay[data-fl-theme="dark"],
+[data-fl-portal][data-fl-theme="dark"] {
+  --fob-raw-bg: #1e1e1e;
+  --fob-raw-surface: #2a2a2a;
+  --fob-raw-surface-2: #333333;
+  --fob-raw-surface-3: #3a3a3a;
+  --fob-raw-border: #3a3a3a;
+  --fob-raw-border-strong: #4a4a4a;
+  --fob-raw-text: #dcddde;
+  --fob-raw-text-muted: #a3a3a3;
+  --fob-raw-text-faint: #7c7c7c;
+  --fob-raw-accent: #a882ff;
+  --fob-raw-accent-hover: #b89aff;
+  --fob-raw-accent-soft: rgba(168, 130, 255, 0.22);
+  --fob-raw-danger: #ff6b6b;
+  --fob-raw-danger-soft: rgba(255, 107, 107, 0.14);
+  --fob-raw-hover: #3a3a3a;
+  --fob-raw-field: #222222;
+  --fob-raw-button-bg: #333333;
+  --fob-raw-track: #4a4a4a;
+  --fob-raw-toggle-knob: #f0f0f0;
+  --fob-raw-scrim: rgba(0, 0, 0, 0.62);
+  --fob-raw-shadow: 0 18px 48px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+#fl-overlay[data-fl-theme="light"],
+[data-fl-portal][data-fl-theme="light"] {
+  --fob-raw-bg: #ffffff;
+  --fob-raw-surface: #ffffff;
+  --fob-raw-surface-2: #f5f5f5;
+  --fob-raw-surface-3: #ececec;
+  --fob-raw-border: #e0e0e0;
+  --fob-raw-border-strong: #c8c8c8;
+  --fob-raw-text: #262626;
+  --fob-raw-text-muted: #666666;
+  --fob-raw-text-faint: #8a8a8a;
+  --fob-raw-accent: #8a5cf6;
+  --fob-raw-accent-hover: #7a4ce8;
+  --fob-raw-accent-soft: rgba(138, 92, 246, 0.16);
+  --fob-raw-danger: #c0392b;
+  --fob-raw-danger-soft: rgba(192, 57, 43, 0.1);
+  --fob-raw-hover: #ececec;
+  --fob-raw-field: #ffffff;
+  --fob-raw-button-bg: #f5f5f5;
+  --fob-raw-track: #d2d2d2;
+  --fob-raw-toggle-knob: #ffffff;
+  --fob-raw-scrim: rgba(0, 0, 0, 0.45);
+  --fob-raw-shadow: 0 18px 48px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+  color-scheme: light;
+}
+
+/* Semantic aliases. The ported plugin's theme layer re-declares the standard
+   Obsidian properties below inside its .ff-ui roots; consuming them through
+   var() means the native controls automatically match the plugin palette when
+   present, and fall back to the neutral Obsidian greys when they are not. */
+#fl-overlay,
+[data-fl-portal] {
+  --fob-bg: var(--background-primary, var(--fob-raw-bg));
+  --fob-surface: var(--background-primary, var(--fob-raw-surface));
+  --fob-surface-2: var(--background-secondary, var(--fob-raw-surface-2));
+  --fob-surface-3: var(--background-secondary-alt, var(--fob-raw-surface-3));
+  --fob-border: var(--background-modifier-border, var(--fob-raw-border));
+  --fob-border-strong: var(--background-modifier-border-hover, var(--fob-raw-border-strong));
+  --fob-text: var(--text-normal, var(--fob-raw-text));
+  --fob-text-muted: var(--text-muted, var(--fob-raw-text-muted));
+  --fob-text-faint: var(--text-faint, var(--fob-raw-text-faint));
+  --fob-accent: var(--interactive-accent, var(--fob-raw-accent));
+  --fob-accent-hover: var(--interactive-accent-hover, var(--fob-raw-accent-hover));
+  --fob-accent-soft: var(--fob-raw-accent-soft);
+  --fob-on-accent: var(--text-on-accent, var(--fob-raw-on-accent));
+  --fob-danger: var(--text-error, var(--fob-raw-danger));
+  --fob-danger-soft: var(--fob-raw-danger-soft);
+  --fob-hover: var(--background-modifier-hover, var(--fob-raw-hover));
+  --fob-field: var(--background-modifier-form-field, var(--fob-raw-field));
+  --fob-button-bg: var(--interactive-normal, var(--fob-raw-button-bg));
+  --fob-track: var(--background-modifier-border, var(--fob-raw-track));
+  --fob-checkbox: var(--checkbox-color, var(--fob-accent));
+  --fob-checkbox-hover: var(--checkbox-color-hover, var(--fob-checkbox));
+  --fob-checkbox-border: var(--checkbox-border-color, var(--fob-border-strong));
+  --fob-toggle-knob: var(--checkbox-marker-color, var(--fob-raw-toggle-knob));
+  --fob-scrim: var(--fob-raw-scrim);
+  --fob-shadow: var(--shadow-l, var(--fob-raw-shadow));
+  --fob-radius: 10px;
+  --fob-radius-control: 6px;
+  --fob-control-height: 32px;
+  --fob-font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --fob-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* ------------------------------------------------------------------ modal */
+[data-fl-portal]:where(.modal-container) {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: var(--fob-font);
+  font-size: 13px;
+  color: var(--fob-text);
+}
+
+[data-fl-portal] :where(.modal-bg) {
+  position: absolute;
+  inset: 0;
+  background: var(--fob-scrim);
+  animation: fl-fade-in 160ms ease-out both;
+}
+
+[data-fl-portal] :where(.modal) {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 48px);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--fob-border-strong);
+  border-radius: 12px;
+  background: var(--fob-surface);
+  color: var(--fob-text);
+  box-shadow: var(--fob-shadow);
+  animation: fl-modal-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+[data-fl-portal] :where(.modal-header) {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 12px 20px;
+  border-bottom: 1px solid var(--fob-border);
+}
+
+[data-fl-portal] :where(.modal-title) {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 16px 52px 14px 20px;
+  border-bottom: 1px solid var(--fob-border);
+  color: var(--fob-text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+[data-fl-portal] :where(.modal-header) :where(.modal-title) {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+[data-fl-portal] :where(.modal-close-button) {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fob-text-muted);
+  font: 400 20px/1 var(--fob-font);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+[data-fl-portal] :where(.modal-close-button):hover {
+  background: var(--fob-hover);
+  border-color: var(--fob-border);
+  color: var(--fob-text);
+}
+
+[data-fl-portal] :where(.modal-close-button):active {
+  transform: translateY(1px);
+}
+
+[data-fl-portal] :where(.modal-close-button):focus-visible {
+  outline: 2px solid var(--fob-accent);
+  outline-offset: 1px;
+}
+
+[data-fl-portal] :where(.modal-close-button):empty::before {
+  content: "\00d7";
+}
+
+[data-fl-portal] :where(.modal-close-button) :where(.svg-icon) {
+  width: 16px;
+  height: 16px;
+}
+
+[data-fl-portal] :where(.modal-content) {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100dvh - 140px);
+  padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--fob-text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+[data-fl-portal] :where(.modal-content)::-webkit-scrollbar {
+  width: 10px;
+}
+
+[data-fl-portal] :where(.modal-content)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-fl-portal] :where(.modal-content)::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--fob-border-strong);
+  background-clip: padding-box;
+}
+
+[data-fl-portal] :where(.modal-content)::-webkit-scrollbar-thumb:hover {
+  background: var(--fob-text-faint);
+  background-clip: padding-box;
+}
+
+[data-fl-portal] :where(.modal-button-container) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+[data-fl-portal] :where(.modal) :where(.svg-icon) {
+  width: 16px;
+  height: 16px;
+}
+
+/* ------------------------------------------------------------------- menu */
+[data-fl-portal]:where(.menu),
+[data-fl-portal] :where(.menu) {
+  position: fixed;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 180px;
+  max-width: min(340px, calc(100vw - 16px));
+  max-height: min(70vh, 480px);
+  padding: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--fob-border-strong);
+  border-radius: 10px;
+  background: var(--fob-surface);
+  color: var(--fob-text);
+  box-shadow: var(--fob-shadow);
+  font-family: var(--fob-font);
+  font-size: 13px;
+  pointer-events: auto;
+  animation: fl-menu-in 120ms ease-out both;
+}
+
+[data-fl-portal] :where(.menu-item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: var(--fob-radius-control);
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+[data-fl-portal] :where(.menu-item):is(:hover, .selected, .is-selected) {
+  background: var(--fob-hover);
+  color: var(--fob-text);
+}
+
+[data-fl-portal] :where(.menu-item):focus-visible {
+  outline: 2px solid var(--fob-accent);
+  outline-offset: -2px;
+}
+
+[data-fl-portal] :where(.menu-item.is-disabled, .menu-item[aria-disabled="true"]) {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+[data-fl-portal] :where(.menu-item-icon) {
+  display: flex;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--fob-text-muted);
+}
+
+[data-fl-portal] :where(.menu-item-icon) :where(.svg-icon) {
+  width: 16px;
+  height: 16px;
+}
+
+[data-fl-portal] :where(.menu-item-title) {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-fl-portal] :where(.menu-item-checkbox) {
+  display: flex;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--fob-accent);
+}
+
+[data-fl-portal] :where(.menu-item-checkbox) :where(.svg-icon) {
+  width: 16px;
+  height: 16px;
+}
+
+[data-fl-portal] :where(.menu-item-hotkey) {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--fob-text-faint);
+  font-size: 12px;
+}
+
+[data-fl-portal] :where(.menu-separator) {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--fob-border);
+}
+
+/* ---------------------------------------------------------------- setting */
+[data-fl-portal] :where(.setting-item) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--fob-border);
+}
+
+[data-fl-portal] :where(.setting-item):first-child {
+  padding-top: 4px;
+  border-top: 0;
+}
+
+[data-fl-portal] :where(.setting-item-heading) {
+  display: block;
+  padding: 18px 0 6px;
+  border-top: 0;
+}
+
+[data-fl-portal] :where(.setting-item-info) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+[data-fl-portal] :where(.setting-item-name) {
+  color: var(--fob-text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+[data-fl-portal] :where(.setting-item-heading) :where(.setting-item-name) {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+[data-fl-portal] :where(.setting-item-description) {
+  margin-top: 3px;
+  color: var(--fob-text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+[data-fl-portal] :where(.setting-item-control) {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 100%;
+}
+
+[data-fl-portal] :where(.setting-item-control) :where(input[type="text"], select.dropdown) {
+  width: 220px;
+  max-width: 100%;
+}
+
+/* --------------------------------------------------------------- controls */
+[data-fl-portal] :where(input[type="text"], input[type="search"], input[type="number"], input[type="password"], input[type="date"], input[type="month"], textarea) {
+  height: var(--fob-control-height);
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 9px;
+  border: 1px solid var(--fob-border-strong);
+  border-radius: var(--fob-radius-control);
+  outline: none;
+  background: var(--fob-field);
+  color: var(--fob-text);
+  font: 400 13px/1.4 var(--fob-font);
+  box-shadow: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+[data-fl-portal] :where(input[type="text"], input[type="search"], input[type="number"], input[type="password"], input[type="date"], input[type="month"], textarea):focus {
+  border-color: var(--fob-accent);
+  box-shadow: 0 0 0 2px var(--fob-accent-soft);
+}
+
+[data-fl-portal] :where(input, textarea)::placeholder {
+  color: var(--fob-text-faint);
+  opacity: 1;
+}
+
+[data-fl-portal] :where(input, textarea):disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+[data-fl-portal] :where(textarea) {
+  height: auto;
+  min-height: 72px;
+  padding: 7px 9px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+[data-fl-portal] :where(input[type="date"], input[type="month"])::-webkit-calendar-picker-indicator {
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+[data-fl-portal] :where(select.dropdown) {
+  height: var(--fob-control-height);
+  min-width: 120px;
+  max-width: 100%;
+  padding: 0 28px 0 9px;
+  border: 1px solid var(--fob-border-strong);
+  border-radius: var(--fob-radius-control);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--fob-field);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23909090' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 14px 14px;
+  color: var(--fob-text);
+  font: 400 13px/1.4 var(--fob-font);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+[data-fl-portal] :where(select.dropdown):focus {
+  border-color: var(--fob-accent);
+  box-shadow: 0 0 0 2px var(--fob-accent-soft);
+}
+
+[data-fl-portal] :where(select.dropdown):disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+[data-fl-portal] :where(input[type="checkbox"]) {
+  accent-color: var(--fob-accent);
+  cursor: pointer;
+}
+
+[data-fl-portal] :where(input[type="range"]) {
+  width: 160px;
+  max-width: 100%;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--fob-accent);
+}
+
+[data-fl-portal] :where(input[type="range"])::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fob-track);
+}
+
+[data-fl-portal] :where(input[type="range"])::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--fob-accent);
+  box-shadow: 0 0 0 1px var(--fob-surface);
+}
+
+[data-fl-portal] :where(input[type="range"])::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fob-track);
+}
+
+[data-fl-portal] :where(input[type="range"])::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fob-accent);
+}
+
+[data-fl-portal] :where(input[type="range"]):focus-visible {
+  outline: 2px solid var(--fob-accent);
+  outline-offset: 2px;
+}
+
+/* Obsidian toggle: a .checkbox-container pill wrapping a hidden checkbox. */
+[data-fl-portal] :where(.checkbox-container) {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 22px;
+  border: 1px solid var(--fob-checkbox-border);
+  border-radius: 999px;
+  background: var(--fob-track);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+[data-fl-portal] :where(.checkbox-container)::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--fob-toggle-knob);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+[data-fl-portal] :where(.checkbox-container):is(.is-enabled, .is-checked) {
+  border-color: var(--fob-checkbox);
+  background: var(--fob-checkbox);
+}
+
+[data-fl-portal] :where(.checkbox-container):has(input:checked) {
+  border-color: var(--fob-checkbox);
+  background: var(--fob-checkbox);
+}
+
+[data-fl-portal] :where(.checkbox-container):hover:not(:has(input:disabled)) {
+  border-color: var(--fob-checkbox-hover);
+}
+
+[data-fl-portal] :where(.checkbox-container):is(.is-enabled, .is-checked)::after {
+  transform: translateX(18px);
+}
+
+[data-fl-portal] :where(.checkbox-container):has(input:checked)::after {
+  transform: translateX(18px);
+}
+
+[data-fl-portal] :where(.checkbox-container):is(.is-disabled, .is-readonly) {
+  opacity: 0.5;
+  cursor: default;
+}
+
+[data-fl-portal] :where(.checkbox-container) :where(input[type="checkbox"]) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+[data-fl-portal] :where(.checkbox-container):has(input:focus-visible) {
+  outline: 2px solid var(--fob-accent);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------- button */
+[data-fl-portal] :where(.button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--fob-control-height);
+  padding: 0 14px;
+  border: 1px solid var(--fob-border-strong);
+  border-radius: var(--fob-radius-control);
+  background: var(--fob-button-bg);
+  color: var(--fob-text);
+  font: 500 13px/1 var(--fob-font);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 60ms ease;
+}
+
+[data-fl-portal] :where(.button):hover {
+  border-color: var(--fob-text-faint);
+  background: var(--fob-hover);
+}
+
+[data-fl-portal] :where(.button):active {
+  transform: translateY(1px);
+}
+
+[data-fl-portal] :where(.button):focus-visible {
+  outline: 2px solid var(--fob-accent);
+  outline-offset: 2px;
+}
+
+[data-fl-portal] :where(.button):disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+[data-fl-portal] .button.mod-cta {
+  border-color: var(--fob-accent);
+  background: var(--fob-accent);
+  color: var(--fob-on-accent);
+}
+
+[data-fl-portal] .button.mod-cta:hover {
+  border-color: var(--fob-accent-hover);
+  background: var(--fob-accent-hover);
+}
+
+[data-fl-portal] .button:is(.mod-warning, .mod-danger) {
+  border-color: var(--fob-danger);
+  background: var(--fob-danger-soft);
+  color: var(--fob-danger);
+}
+
+[data-fl-portal] .button:is(.mod-warning, .mod-danger):hover {
+  border-color: var(--fob-danger);
+  background: var(--fob-danger-soft);
+  color: var(--fob-danger);
+}
+
+[data-fl-portal] :where(.button) :where(.svg-icon) {
+  width: 16px;
+  height: 16px;
+}
+
+/* ----------------------------------------------------------------- notice */
+[data-fl-portal]:where(.notice-container) {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+  font-family: var(--fob-font);
+}
+
+[data-fl-portal] :where(.notice) {
+  min-width: 180px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 1px solid var(--fob-border-strong);
+  border-radius: 10px;
+  background: var(--fob-surface-2);
+  color: var(--fob-text);
+  box-shadow: var(--fob-shadow);
+  font-family: var(--fob-font);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+  animation: fl-notice-in 180ms ease-out both;
+}
+
+[data-fl-portal] :where(.notice):is(.mod-error, .is-error) {
+  border-color: var(--fob-danger);
+}
+
+[data-fl-portal] :where(.notice):is(.mod-warning, .is-warning) {
+  border-color: var(--fob-accent);
+}
+
+[data-fl-portal] :where(.notice):is(.is-hiding, .is-dismissing) {
+  animation: fl-notice-out 160ms ease-in both;
+}
+
+[data-fl-portal] :where(.notice) :where(.svg-icon) {
+  width: 16px;
+  height: 16px;
+}
+
+/* -------------------------------------------------------------- keyframes */
+@keyframes fl-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fl-modal-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fl-menu-in {
+  from { opacity: 0; transform: translateY(-3px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fl-notice-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fl-notice-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(6px); }
+}
+
+/* --------------------------------------------------------------- adaptive */
+@media (max-width: 560px) {
+  [data-fl-portal]:where(.modal-container) {
+    padding: 10px;
+  }
+
+  [data-fl-portal] :where(.modal) {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+
+  [data-fl-portal] :where(.modal-title) {
+    padding: 14px 48px 12px 16px;
+    font-size: 15px;
+  }
+
+  [data-fl-portal] :where(.modal-content) {
+    padding: 16px;
+  }
+
+  [data-fl-portal] :where(.setting-item) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  [data-fl-portal] :where(.setting-item-control) {
+    justify-content: flex-start;
+  }
+
+  [data-fl-portal] :where(.setting-item-control) :where(input[type="text"], select.dropdown) {
+    width: 100%;
+  }
+
+  [data-fl-portal]:where(.notice-container) {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    align-items: stretch;
+    max-width: none;
+  }
+
+  [data-fl-portal] :where(.notice) {
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fl-portal] :where(.modal),
+  [data-fl-portal] :where(.modal-bg),
+  [data-fl-portal] :where(.menu),
+  [data-fl-portal] :where(.notice) {
+    animation: none !important;
+  }
+}

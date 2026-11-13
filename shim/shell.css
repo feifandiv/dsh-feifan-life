@@ -1,0 +1,313 @@
+/* Native DSH main panel: its parent owns sidebar and content geometry. */
+#fl-overlay {
+  --fl-shell-font: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  --fl-shell-bg: var(--dsw-alias-bg-base, #faf9f5);
+  --fl-shell-surface: var(--dsw-alias-bg-layer-1, #fff);
+  --fl-shell-surface-2: var(--dsw-alias-bg-layer-2, #f0eee6);
+  --fl-shell-border: var(--dsw-alias-border-l2, #dedbd3);
+  --fl-shell-border-strong: var(--dsw-alias-border-l3, #c7c3b9);
+  --fl-shell-fg: var(--dsw-alias-label-primary, #1f1e1b);
+  --fl-shell-fg-muted: var(--dsw-alias-label-secondary, #6b6a63);
+  --fl-shell-accent: var(--dsw-alias-brand-primary, #c96442);
+  --fl-shell-accent-strong: var(--dsw-alias-button-primary-hover, #b85b3c);
+  --fl-shell-danger: var(--dsw-alias-state-error-primary, #b43b32);
+  --fl-shell-danger-soft: color-mix(in srgb, var(--fl-shell-danger) 10%, transparent);
+  --fl-shell-chrome-bg: var(--dsw-menu-surface-fill, var(--fl-shell-surface));
+  --fl-shell-shadow: 0 12px 36px #00000024;
+  --fl-shell-radius: var(--dsw-radius-panel, 16px);
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--fl-shell-bg);
+  color: var(--fl-shell-fg);
+  font: 14px/1.5 var(--fl-shell-font);
+  -webkit-font-smoothing: antialiased;
+}
+#fl-overlay[data-fl-theme="light"] { color-scheme: light; }
+#fl-overlay[data-fl-theme="dark"] { color-scheme: dark; }
+
+/* ------------------------------------------------------------------ reset */
+#fl-overlay,
+#fl-overlay *,
+#fl-overlay *::before,
+#fl-overlay *::after {
+  box-sizing: border-box;
+}
+
+#fl-overlay :where(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+#fl-overlay [hidden] {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------ stage */
+#fl-overlay #fl-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--fl-shell-border-strong) transparent;
+}
+
+#fl-overlay #fl-stage::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+#fl-overlay #fl-stage::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#fl-overlay #fl-stage::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--fl-shell-border-strong);
+  background-clip: padding-box;
+}
+
+#fl-overlay #fl-stage::-webkit-scrollbar-thumb:hover {
+  background: var(--fl-shell-fg-muted);
+  background-clip: padding-box;
+}
+
+/* The plugin manages its own inner widths; the stage only guarantees that a
+   direct child never collapses below the viewport. */
+#fl-overlay #fl-stage > * {
+  min-width: 0;
+}
+
+#fl-overlay #fl-stage:focus-visible {
+  outline: none;
+}
+
+/* ----------------------------------------------------------------- chrome */
+#fl-overlay #fl-chrome {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--fl-shell-border);
+  border-radius: 12px;
+  background: var(--fl-shell-chrome-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  opacity: 0.4;
+  transform: translateY(-2px);
+  transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
+  /* The bar itself must never eat clicks meant for the page; its buttons
+     re-enable pointer events below. */
+  pointer-events: none;
+}
+
+#fl-overlay #fl-chrome:hover,
+#fl-overlay #fl-chrome:focus-within {
+  border-color: var(--fl-shell-border-strong);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#fl-overlay #fl-chrome button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fl-shell-fg-muted);
+  font: 500 16px/1 var(--fl-shell-font);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+#fl-overlay #fl-chrome button:hover {
+  border-color: var(--fl-shell-border);
+  background: var(--fl-shell-surface-2);
+  color: var(--fl-shell-fg);
+}
+
+#fl-overlay #fl-chrome button:active {
+  transform: translateY(1px);
+}
+
+#fl-overlay #fl-chrome button:focus-visible {
+  outline: 2px solid var(--fl-shell-accent);
+  outline-offset: 2px;
+}
+
+#fl-overlay #fl-chrome button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#fl-overlay #fl-chrome button .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Glyph fallbacks for shims that build empty buttons and rely on CSS icons. */
+#fl-overlay #fl-chrome button:is(#fl-close, [data-fl-action="close"], [aria-label*="关闭"], [title*="关闭"]):empty::before {
+  content: "\00d7";
+  font-size: 20px;
+  line-height: 1;
+}
+
+#fl-overlay #fl-chrome button:is(#fl-refresh, [data-fl-action="refresh"], [aria-label*="刷新"], [title*="刷新"]):empty::before {
+  content: "\21bb";
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------- loading */
+#fl-overlay #fl-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  color: var(--fl-shell-fg-muted);
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+#fl-overlay #fl-loading::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--fl-shell-border-strong);
+  border-top-color: var(--fl-shell-accent);
+  border-radius: 50%;
+  animation: fl-shell-spin 800ms linear infinite;
+}
+
+/* Only supply the caption when the shim leaves the node empty. */
+#fl-overlay #fl-loading:empty::after {
+  content: "正在载入非凡人生…";
+}
+
+/* ------------------------------------------------------------------ error */
+#fl-overlay #fl-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 40;
+  width: min(760px, calc(100vw - 48px));
+  max-height: min(70vh, 640px);
+  margin: 0;
+  padding: 20px 22px;
+  overflow: auto;
+  border: 1px solid var(--fl-shell-border-strong);
+  border-left: 3px solid var(--fl-shell-danger);
+  border-radius: 10px;
+  background: var(--fl-shell-surface);
+  color: var(--fl-shell-fg);
+  box-shadow: var(--fl-shell-shadow);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+  text-align: left;
+  transform: translate(-50%, -50%);
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+#fl-overlay #fl-error :where(h1, h2, h3, h4) {
+  margin: 0 0 10px;
+  color: var(--fl-shell-danger);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+#fl-overlay #fl-error :where(pre, code) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: pre-wrap;
+}
+
+#fl-overlay #fl-error ::selection {
+  background: var(--fl-shell-accent-strong);
+  color: #ffffff;
+}
+
+#fl-overlay #fl-error::-webkit-scrollbar {
+  width: 10px;
+}
+
+#fl-overlay #fl-error::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--fl-shell-border-strong);
+  background-clip: padding-box;
+}
+
+/* -------------------------------------------------------------- keyframes */
+@keyframes fl-shell-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------------------------- adaptive */
+@media (max-width: 640px) {
+  #fl-overlay #fl-chrome {
+    top: 8px;
+    right: 8px;
+    opacity: 0.72;
+  }
+
+  #fl-overlay #fl-chrome button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  #fl-overlay #fl-error {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 32px);
+    padding: 16px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fl-overlay #fl-chrome {
+    transition: none;
+  }
+
+  #fl-overlay #fl-loading::before {
+    animation-duration: 2000ms;
+  }
+}

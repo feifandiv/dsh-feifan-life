@@ -1,0 +1,9 @@
+{
+  "id": "command-center",
+  "name": "非凡人生",
+  "version": "0.2.0",
+  "minAppVersion": "1.4.0",
+  "description": "非凡人生管理系统：任务、规划、财务、清单、习惯、灵感与复盘，统一非凡 UI 配色 1",
+  "author": "非凡",
+  "isDesktopOnly": true
+}

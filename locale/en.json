@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Feifan Life",
+    "description": "A full port of the Obsidian plugin 非凡人生: tasks, projects, planning, finance ledger, lists and inventory, habit check-ins, an inspiration library and reviews, with the original interface. Data lives in 08-系统/09非凡人生数据."
+  },
+  "launcher": {
+    "title": "Feifan Life",
+    "hint": "Open Feifan Life"
+  }
+}

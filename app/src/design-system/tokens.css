@@ -1,0 +1,81 @@
+/* Palette 1: wine for interaction, blue for information, green for success, orange for alerts. */
+.ff-ui {
+  --ff-brand-blue: #103B64;
+  --ff-brand-green: #155641;
+  --ff-brand-wine: #982C3D;
+  --ff-brand-orange: #E86512;
+  --ff-on-color: #FFFFFF;
+  --ff-on-alert: #161616;
+  --ff-font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ff-radius-control: 6px;
+  --ff-radius-panel: 8px;
+  --ff-space-1: 4px;
+  --ff-space-2: 8px;
+  --ff-space-3: 12px;
+  --ff-space-4: 16px;
+  --ff-space-6: 24px;
+  --ff-control-height: 32px;
+  --ff-row-height: 40px;
+}
+.ff-ui, .ff-ui[data-ff-mode="light"] {
+  color-scheme: light;
+  --ff-canvas: #F4F4F4;
+  --ff-surface: #FFFFFF;
+  --ff-surface-subtle: #F4F4F4;
+  --ff-surface-active: #E8E8E8;
+  --ff-border: #D2D2D2;
+  --ff-border-control: #767676;
+  --ff-text: #262626;
+  --ff-heading: #103B64;
+  --ff-text-secondary: #4D4D4D;
+  --ff-text-muted: #595959;
+  --ff-action: #982C3D;
+  --ff-action-hover: #982C3D;
+  --ff-on-action: #FFFFFF;
+  --ff-selection: #982C3D;
+  --ff-selection-soft: #F4F4F4;
+  --ff-selection-bg: #982C3D;
+  --ff-on-selection: #FFFFFF;
+  --ff-tag-bg: #F4F4F4;
+  --ff-tag-text: #103B64;
+  --ff-track: #D2D2D2;
+  --ff-success: #155641;
+  --ff-success-soft: #F4F4F4;
+  --ff-warning: #103B64;
+  --ff-warning-soft: #F4F4F4;
+  --ff-danger: #982C3D;
+  --ff-danger-soft: #F4F4F4;
+  --ff-focus: #982C3D;
+  --ff-shadow: 0 12px 36px #00000024;
+}
+.ff-ui[data-ff-mode="dark"] {
+  color-scheme: dark;
+  --ff-canvas: #191919;
+  --ff-surface: #252525;
+  --ff-surface-subtle: #303030;
+  --ff-surface-active: #3A3A3A;
+  --ff-border: #555555;
+  --ff-border-control: #969696;
+  --ff-text: #EEEEEE;
+  --ff-heading: #EEEEEE;
+  --ff-text-secondary: #D0D0D0;
+  --ff-text-muted: #BDBDBD;
+  --ff-action: #982C3D;
+  --ff-action-hover: #982C3D;
+  --ff-on-action: #FFFFFF;
+  --ff-selection: #FFFFFF;
+  --ff-selection-soft: #982C3D;
+  --ff-selection-bg: #982C3D;
+  --ff-on-selection: #FFFFFF;
+  --ff-tag-bg: #303030;
+  --ff-tag-text: #EEEEEE;
+  --ff-track: #BDBDBD;
+  --ff-success: #FFFFFF;
+  --ff-success-soft: #155641;
+  --ff-warning: #FFFFFF;
+  --ff-warning-soft: #103B64;
+  --ff-danger: #FFFFFF;
+  --ff-danger-soft: #982C3D;
+  --ff-focus: #FFFFFF;
+  --ff-shadow: 0 16px 48px #00000066;
+}

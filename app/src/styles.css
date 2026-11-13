@@ -1,0 +1,9 @@
+/* Feifan UI 1.0: one palette, scoped surfaces, shared components. */
+@import "./design-system/tokens.css";
+@import "./design-system/module-tokens.css";
+@import "./styles/base.css";
+@import "./finance/styles.css";
+@import "./kanban/styles.css";
+@import "./life/styles.css";
+@import "./styles/layout.css";
+@import "./design-system/components.css";

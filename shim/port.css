@@ -1,0 +1,125 @@
+/*
+ * port.css — the few rules the port owns outside the shell stylesheet.
+ *
+ * Scoping: everything is either the plugin's own launcher button or the
+ * overlay's open/closed state; no rule here reaches the Harness UI.
+ */
+
+/* Fill only the native main panel; DSH retains ownership of its sidebar. */
+.fl-slot {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Closed shell. display is toggled here rather than via [hidden] because the
+   shell stylesheet sets display:flex on #fl-overlay. */
+#fl-overlay[data-fl-open="false"] {
+  display: none !important;
+}
+
+#fl-overlay { pointer-events: auto; }
+
+/* The original app inherits Obsidian's flat controls; browsers otherwise add
+   raised native borders to tabs and icon buttons. Keep specificity below the
+   original component rules so every business component retains its styling. */
+:where(#fl-overlay, [data-fl-portal]) :where(button) {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#fl-overlay #fl-chrome { top: auto; bottom: 14px; }
+#fl-stage > .workspace-leaf { height: 100%; }
+#fl-stage .workspace-leaf-content { height: 100%; }
+[data-fl-portal] .modal-title:empty { display: none; }
+
+/* DSH owns all theme choices, including body-mounted menus and dialogs. */
+.ff-ui[data-ff-mode] {
+  --ff-canvas: var(--dsw-alias-bg-base, #faf9f5);
+  --ff-surface: var(--dsw-alias-bg-layer-1, #fff);
+  --ff-surface-subtle: var(--dsw-alias-bg-layer-2, #f0eee6);
+  --ff-surface-active: var(--dsw-alias-interactive-bg-active, #e8e5dc);
+  --ff-border: var(--dsw-alias-border-l2, #e5e2d9);
+  --ff-border-control: var(--dsw-alias-border-l3, #d8d4c9);
+  --ff-text: var(--dsw-alias-label-primary, #1f1e1b);
+  --ff-heading: var(--ff-text);
+  --ff-text-secondary: var(--dsw-alias-label-secondary, #6b6a63);
+  --ff-text-muted: var(--dsw-alias-label-tertiary, #8a877c);
+  --ff-action: var(--dsw-alias-button-primary-fill, #1f1e1b);
+  --ff-action-hover: var(--dsw-alias-button-primary-hover, #45443f);
+  --ff-on-action: var(--dsw-alias-label-primary-inverted, #fff);
+  --ff-selection: var(--dsw-static-deepseek-500, #c96442);
+  --ff-selection-soft: var(--dsw-alias-interactive-bg-hover-accent, #c964421a);
+  --ff-selection-bg: var(--dsw-alias-brand-primary, #1f1e1b);
+  --ff-on-selection: var(--ff-on-action);
+  --ff-tag-bg: var(--ff-surface-subtle);
+  --ff-tag-text: var(--ff-text-secondary);
+  --ff-track: var(--ff-border);
+  --ff-success: var(--dsw-alias-state-success-primary, #39835a);
+  --ff-warning: var(--dsw-alias-state-warn-primary, #b78033);
+  --ff-danger: var(--dsw-alias-state-error-primary, #c64e45);
+  --ff-success-soft: color-mix(in srgb, var(--ff-success) 12%, var(--ff-surface));
+  --ff-warning-soft: color-mix(in srgb, var(--ff-warning) 12%, var(--ff-surface));
+  --ff-danger-soft: color-mix(in srgb, var(--ff-danger) 12%, var(--ff-surface));
+  --ff-focus: var(--dsw-focus-ring-color, var(--ff-selection));
+  --ff-brand-blue: var(--ff-selection);
+  --ff-brand-wine: var(--ff-danger);
+  --ff-brand-green: var(--ff-success);
+  --ff-brand-orange: var(--ff-warning);
+  --ff-radius-control: var(--dsw-radius-md, 8px);
+  --ff-radius-panel: var(--dsw-radius-panel, 16px);
+  --ff-shadow: 0 12px 36px #00000024;
+}
+#fl-overlay .cc-body { grid-template-columns: minmax(0, 1fr); }
+#fl-overlay .cc-theme-hint { font-size: 11px; color: var(--ff-text-muted); white-space: nowrap; }
+#fl-overlay .cc-proto-badge { display: none; }
+#fl-overlay .cc-shell { padding-top: max(16px, var(--dsh-frame-top-clearance, 0px)); }
+#fl-overlay .ff-ui[data-ff-mode] :is(.card,.cc-mod-head,.cc-tabs,.hero,.pk-column,.pk-table,.ll-table-wrap,.fl-stats,.fl-ledger-summary),
+#fl-overlay .ff-ui[data-ff-mode] .cc-view :is([class$="-card"],[class$="__card"]),
+.ff-ui[data-ff-mode] :is(.modal,.cc-menu,.pk-select__menu,.pk-select__list,.hero-bg-pop) {
+  border-radius: var(--ff-radius-panel) !important;
+}
+#fl-overlay .ff-ui[data-ff-mode] :is(.btn,.cc-tab,.cc-btn,.cc-minibtn,.cc-iconbtn,.pk-btn,.fl-btn,.ll-btn,.cc-inp,.pk-input,.fl-input,.ll-input,.fl-tab,.ll-tab,.cc-plan-tab,.fl-ledger-btn) {
+  border-radius: var(--ff-radius-control) !important;
+}
+#fl-overlay .ff-ui[data-ff-mode] .cc-tab.active::after { display: none; }
+#fl-overlay .ff-ui[data-ff-mode] .hero :is(.chip,.hero-avatar) {
+  background: #00000040 !important;
+  backdrop-filter: blur(8px);
+}
+@container (max-width: 900px) {
+  #fl-overlay .cc-layout { grid-template-columns: minmax(0, 1fr); }
+  #fl-overlay .cc-right { display: none; }
+}
+@container (max-width: 620px) {
+  #fl-overlay .cc-theme-hint { display: none; }
+}
+
+.ff-ui[data-ff-mode] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea, .pk-select__btn, .ff-select__trigger) {
+  border-radius: var(--ff-radius-control) !important;
+}
+/* Status chips use pale surfaces so the host's bright dark-theme status colours
+   remain readable. Photography keeps its own white foreground. */
+#fl-overlay .ff-ui[data-ff-mode] :is(.pk-pill.is-p0,.cc-focus-priority.p0,.pri-P0) { background: var(--ff-danger-soft) !important; color: var(--ff-danger) !important; }
+#fl-overlay .ff-ui[data-ff-mode] :is(.pk-pill.is-p1,.cc-focus-priority.p1,.pri-P1) { background: var(--ff-warning-soft) !important; color: var(--ff-warning) !important; }
+#fl-overlay .ff-ui[data-ff-mode] :is(.pk-pill.is-p2,.cc-focus-priority.p2,.pri-P2) { background: var(--ff-selection-soft) !important; color: var(--ff-selection) !important; }
+
+/* Shared selects own their only caret; legacy module pseudo arrows must not
+   paint beneath the SVG. Restore symmetric padding after removing that arrow. */
+.ff-ui .ff-select-button::before,
+.ff-ui .ff-select-button::after { content: none !important; display: none !important; }
+.ff-ui .ff-select-button { padding: 5px 9px !important; }
+.ff-ui .ff-select-caret { width: 16px; height: 16px; align-items: center; justify-content: center; }
+
+/* Size the popup by its longest label, not the narrow filter trigger. Keep
+   exceptional labels on one line with internal horizontal scrolling on phones. */
+.ff-ui .ff-select-menu { overflow: auto; }
+.ff-ui .ff-select-options { width: max-content; min-width: 100%; }
+.ff-ui .ff-select-option { white-space: nowrap; overflow-wrap: normal; }
+#fl-overlay .ll-filterbar .ff-select,
+#fl-overlay .ll-sortbar .ff-select { width: max-content; }

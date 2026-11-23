@@ -505,10 +505,23 @@
   flex: 0 0 auto;
 }
 .ff-ui .pk-input--cur {
-  flex: 0 0 56px;
+  /* 按数字位数定宽（ch 随 tabular-nums 的 0 宽度），长数字不再被裁掉；
+     隐藏 number 原生上下箭头，把宽度让给数字本身。 */
+  flex: 0 0 auto;
+  width: 8ch;
+  min-width: 62px;
+  max-width: 120px;
   padding: 4px 7px;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+  text-align: right;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.ff-ui .pk-input--cur::-webkit-outer-spin-button,
+.ff-ui .pk-input--cur::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .ff-ui .pk-row__slash {
   color: var(--pk-text-3);
@@ -1460,8 +1473,11 @@
 }
 
 .ff-ui .pk-input--cur {
-  width: 54px;
-  flex-basis: 54px;
+  /* 与前段主规则一致的按位数定宽（覆盖旧的 54px 固定值） */
+  width: 8ch;
+  min-width: 62px;
+  max-width: 120px;
+  flex-basis: auto;
 }
 
 .ff-ui .pk-donebar,

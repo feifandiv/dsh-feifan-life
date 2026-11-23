@@ -187,7 +187,7 @@ export function defaultCmd(): CmdNamespace {
 export function defaultSettings(): CCSettings {
   return {
     skin: 'palette-1', theme: 'light', themeMode: 'system', heroBg: 'dusk', heroDim: 0.45,
-    city: '杭州', defaultTab: 'overview',
+    city: '杭州', defaultTab: 'tasks',
     mirrorPath: '02-长期领域/03任务看板', archiveAfterDays: 30,
   };
 }

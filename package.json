@@ -1,6 +1,6 @@
 {
   "name": "@fanfan4589/dsh-feifan-life",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "非凡人生个人版 for DSH：复用当前 Obsidian 插件的界面与业务逻辑，数据独立存储。",
   "type": "module",
   "license": "GPL-3.0-only",
@@ -27,7 +27,10 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md",
+    "native/*.swift",
+    "native/*.html"
   ],
   "scripts": {
     "build": "node build.mjs",
@@ -64,5 +67,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.1 <0.4.0"
   }
 }

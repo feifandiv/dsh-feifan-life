@@ -49,6 +49,9 @@ export class CommandCenterView extends ItemView {
 
   constructor(leaf: WorkspaceLeaf, private plugin: CommandCenterPlugin) {
     super(leaf);
+    // 进入非凡人生默认落在「任务」页（settings.defaultTab 由 normalize 统一为 tasks）。
+    const configured = this.plugin.stores.root.data.settings.defaultTab as TabKey | undefined;
+    if (configured === 'overview' || configured === 'tasks') this.activeTab = configured;
     this.finPanel = new FinancePanel(this.app, this.plugin.stores.finance);
     this.kanbanPanel = new KanbanPanel({
       store: this.plugin.stores.kanban,
@@ -93,6 +96,9 @@ export class CommandCenterView extends ItemView {
       });
     }
     const right = tabsBar.createDiv({ cls: 'cc-tabs-right' });
+    const reloadBtn = right.createEl('button', { cls: 'cc-iconbtn cc-reload-btn', attr: { title: '从磁盘刷新数据（AI 写入后点这里）', 'aria-label': '从磁盘刷新数据' } });
+    setIcon(reloadBtn, 'refresh-cw');
+    reloadBtn.addEventListener('click', () => { void this.plugin.reloadAll('manual'); });
     right.createDiv({ cls: 'cc-proto-badge', text: '非凡人生' });
     right.createDiv({ cls: 'cc-theme-hint', text: '跟随 DSH 主题', attr: { title: '在 DSH 设置 → 通用中调整皮肤与外观' } });
 

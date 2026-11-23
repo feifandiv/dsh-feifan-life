@@ -1,5 +1,5 @@
 // 非凡人生 · 插件入口：根数据层 + 三模块 store + 中央视图
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Plugin, WorkspaceLeaf, Notice } from 'obsidian';
 import { RootStore } from './store';
 import { FinanceStore } from './finance/store';
 import { KanbanStore } from './kanban/store';
@@ -20,6 +20,8 @@ export default class CommandCenterPlugin extends Plugin {
   };
   activeView: CommandCenterView | null = null;
   theme!: ThemeController;
+  private reloadTimer: number | null = null;
+  private autoReloadInFlight = false;
 
   async onload(): Promise<void> {
     const root = new RootStore(this);
@@ -41,6 +43,9 @@ export default class CommandCenterPlugin extends Plugin {
     registerTheme(this.app, this.theme);
     this.theme.setMode(root.data.settings.themeMode ?? 'system');
 
+    // 外部变更自动刷新：AI 侧直接改写 data.json 后，面板 4 秒内自动跟上，无需重启
+    this.reloadTimer = window.setInterval(() => void this.autoReload(), 4000);
+
     this.registerView(VIEW_TYPE_CC, (leaf: WorkspaceLeaf) => new CommandCenterView(leaf, this));
 
     this.addRibbonIcon('command', '非凡人生', () => this.activate());
@@ -61,6 +66,10 @@ export default class CommandCenterPlugin extends Plugin {
   }
 
   async onunload(): Promise<void> {
+    if (this.reloadTimer !== null) {
+      window.clearInterval(this.reloadTimer);
+      this.reloadTimer = null;
+    }
     closeSelect();
     closeMenus(this.app);
     closeModals(this.app);
@@ -69,7 +78,38 @@ export default class CommandCenterPlugin extends Plugin {
     unregisterTheme(this.app);
   }
 
-  async activate(tab: TabKey = 'overview'): Promise<void> {
+  /** 全量从磁盘刷新：主数据重读 → 各模块 store 重新装载 → 广播重渲染。 */
+  async reloadAll(reason: 'auto' | 'manual' = 'manual'): Promise<void> {
+    const root = this.stores.root;
+    const changed = await root.reloadFromDisk();
+    if (!changed) {
+      if (reason === 'manual') new Notice('非凡人生：数据已是最新。');
+      return;
+    }
+    if (root.normalize()) await root.save();
+    await this.stores.life.load();
+    await this.stores.finance.load();
+    await this.stores.kanban.load();
+    this.stores.life.notifyChanged();
+    this.stores.finance.notifyChanged();
+    this.stores.kanban.notifyChanged();
+    new Notice(reason === 'auto' ? '非凡人生：检测到外部更新，已自动刷新。' : '非凡人生：已从磁盘刷新。', 4000);
+  }
+
+  private async autoReload(): Promise<void> {
+    if (this.autoReloadInFlight) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
+    this.autoReloadInFlight = true;
+    try {
+      if (await this.stores.root.hasExternalChange()) await this.reloadAll('auto');
+    } catch (error) {
+      console.error('[非凡人生] 自动刷新失败', error);
+    } finally {
+      this.autoReloadInFlight = false;
+    }
+  }
+
+  async activate(tab: TabKey = 'tasks'): Promise<void> {
     const { workspace } = this.app;
     let leaf = workspace.getLeavesOfType(VIEW_TYPE_CC)[0];
     if (!leaf) {

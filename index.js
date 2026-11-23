@@ -7,6 +7,7 @@
  * task mirrors. All filesystem work is confined to the configured roots.
  */
 import { createFileSystem, contentTypeFor } from './host/fs-api.js';
+import { createFocusWindow } from './host/focus-window.js';
 
 export const inject = ['webServer', 'connection'];
 
@@ -28,12 +29,12 @@ function sendJson(res, status, value) {
   res.end(body);
 }
 
-async function readBody(req) {
+async function readBody(req, limit = MAX_BODY_BYTES) {
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > MAX_BODY_BYTES) throw new Error('request body too large');
+    if (size > limit) throw new Error('request body too large');
     chunks.push(chunk);
   }
   if (!chunks.length) return {};
@@ -44,6 +45,26 @@ async function readBody(req) {
 export function apply(ctx, config = {}) {
   const settings = { ...DEFAULTS, ...(config ?? {}) };
   const files = createFileSystem(settings);
+  const focusWindow = createFocusWindow();
+  ctx.effect(() => () => focusWindow.dispose());
+  ctx.effect(() => ctx.webServer.register({
+    kind: 'exact',
+    path: ROUTE + '/focus-window',
+    handler: async (req, res) => {
+      // Native windows are an authenticated Host capability, never an open local endpoint.
+      if (typeof ctx.connection.requestRejection !== 'function') {
+        sendJson(res, 401, { ok: false, error: 'Host admission check unavailable' }); return;
+      }
+      const rejection = ctx.connection.requestRejection(req);
+      if (rejection !== undefined) { sendJson(res, rejection, { ok: false, error: 'Unauthorized' }); return; }
+      if (req.method !== 'POST') { sendJson(res, 405, { ok: false, error: 'POST required' }); return; }
+      if (!String(req.headers['content-type'] || '').startsWith('application/json')) {
+        sendJson(res, 415, { ok: false, error: 'application/json required' }); return;
+      }
+      try { sendJson(res, 200, await focusWindow.handle(await readBody(req, 1024 * 1024))); }
+      catch (error) { sendJson(res, 400, { ok: false, error: String(error?.message || error) }); }
+    },
+  }));
 
   async function handleFs(request) {
     const { op } = request;

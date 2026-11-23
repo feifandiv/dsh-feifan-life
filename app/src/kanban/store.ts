@@ -227,6 +227,11 @@ export class KanbanStore {
     this.listeners.forEach((cb) => cb());
   }
 
+  /** 外部数据重载后广播，驱动所有订阅视图重渲染 */
+  notifyChanged(): void {
+    this.emit();
+  }
+
   /** 统一变更入口：改内存 → 排队保存 → 立即通知 → 等待持久化。
    *  silent=true 时只持久化不广播（用于高频内联编辑，避免整板重渲染丢焦点/频闪）。 */
   async mutate(fn: (d: KanbanData) => void, silent = false): Promise<void> {

@@ -36,6 +36,7 @@ const bootstrap = await esbuild.build({ stdin: { contents: `
     window.setSidebarWidth = setWidth;
     const Main = entries.find(e => e.options.name === 'main' && e.options.key === panel)?.Component;
     const panels = entries.filter(e => e.options.name === 'sidebar.panellist').sort((a,b)=>a.options.order-b.options.order);
+    const overlays = entries.filter(e => e.options.name === 'shell.overlay').sort((a,b)=>(a.options.order||0)-(b.options.order||0));
     return React.createElement('div', {id:'frame',style:{display:'grid',gridTemplateColumns:width+'px minmax(0,1fr)',height:'100dvh',overflow:'hidden'}},
       React.createElement('aside', {id:'sidebar',style:{background:'var(--dsw-specific-sidebar-fill)',color:'var(--dsw-alias-label-primary)',minWidth:0,overflow:'hidden',padding:'12px',display:'flex',flexDirection:'column',gap:'12px'}},
         React.createElement('button',{id:'sidebar-toggle',onClick:()=>setWidth(w=>w===280?56:280)},'☰'),
@@ -45,7 +46,8 @@ const bootstrap = await esbuild.build({ stdin: { contents: `
           ...panels.map(({options,Component})=>React.createElement('button',{key:options.id,'aria-label':options.label(),'aria-current':panel===options.id?'page':undefined,onClick:()=>layout.selectPanel(options.id)},
             React.createElement(Component,{size:width>56?16:18,active:panel===options.id}),width>56?options.label():null)),
           React.createElement('button',{'aria-label':'更多'},'更多'))),
-      React.createElement('main',{id:'main',style:{display:'flex',flexDirection:'column',minWidth:0,minHeight:0}}, Main ? React.createElement(Main) : 'DSH 对话'));
+      React.createElement('main',{id:'main',style:{display:'flex',flexDirection:'column',minWidth:0,minHeight:0}}, Main ? React.createElement(Main) : 'DSH 对话'),
+      React.createElement('div',{id:'overlay-layer'}, overlays.map(({options,Component})=>React.createElement(Component,{key:options.id}))));
   }
   window.__ModuleLoader__ = {load(def) {
     const plugin = def.factory(name => { if(name === 'react') return React; throw Error(name); });
@@ -129,6 +131,8 @@ try {
   await page.waitForSelector('.cc-tabs');
   assert.equal(await page.locator('.cc-tab').count(),8);
   results.checks.push('native main panel: sidebar expanded/collapsed/resized stays clickable; navigate away and reopen; no internal left column');
+  // 默认落地页已改为「任务」（用户要求 2026-11）；主题令牌校验需要总览页的 .btn.primary，先切回总览。
+  await page.locator('.cc-tab[data-tab="overview"]').click();
   for(const skin of ['paper','mimo']) for(const dark of [false,true]) {
     await page.evaluate(({skin,dark})=>{document.documentElement.dataset.dshSkin=skin;document.body.toggleAttribute('data-ds-dark-theme',dark);},{skin,dark});
     await page.waitForFunction(dark=>document.querySelector('.ff-ui').dataset.ffMode===(dark?'dark':'light'),dark);
@@ -176,6 +180,39 @@ try {
   assert.equal(await page.locator('#fl-overlay').getAttribute('data-fl-open'),'true');
   assert.equal(await newTask.evaluate(el=>document.activeElement===el),true);
   results.checks.push('Escape closes modal, restores focus, leaves workspace open');
+  // Focus uses the real shared stores; all mutations below target the temp data copy.
+  await page.evaluate(() => {
+    const p = window.__dshFeifanLife.plugin();
+    const task = p.stores.root.data.kanban.tasks.find(x => x.name === 'Codex 临时任务验收');
+    const now = new Date();
+    const date = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    return p.stores.root.mutate(d => { d.cmd.focusPins = [{ date, taskId: task.id }]; });
+  });
+  await page.waitForSelector('.fl-focus-ball');
+  assert.equal(await page.locator('.fl-focus-ball__num').innerText(), '1');
+  const ballBox = await page.locator('.fl-focus-ball').boundingBox();
+  await page.mouse.move(ballBox.x + 26, ballBox.y + 26);
+  await page.mouse.down();await page.mouse.move(30,ballBox.y+26,{steps:15});await page.mouse.up();
+  assert.equal(await page.locator('.fl-focus-card').count(),0);
+  await page.locator('.fl-focus-ball').click();await page.waitForSelector('.fl-focus-card');
+  assert.equal(await page.locator('.fl-focus-row__name').first().innerText(),'Codex 临时任务验收');
+  assert.equal(await page.locator('.fl-focus-row input[type=checkbox]').count(),0);
+  await page.locator('.fl-focus-card').getByRole('button',{name:'选择',exact:true}).click();
+  await page.locator('.fl-pick-toggle').click();
+  await page.locator('.fl-focus-card').getByRole('button',{name:'完成',exact:true}).click();
+  assert.equal(await page.locator('.fl-focus-row').count(),0);
+  await page.locator('.fl-focus-card').getByRole('button',{name:'选择',exact:true}).click();
+  await page.locator('.fl-pick-toggle').click();
+  await page.locator('.fl-focus-card').getByRole('button',{name:'完成',exact:true}).click();
+  await page.locator('.fl-focus-card').getByRole('button',{name:'收起',exact:true}).click();
+  await page.locator('.fl-focus-ball').click();await page.waitForSelector('.fl-focus-row__name');
+  await page.screenshot({animations:'disabled',path:path.join(qa,'focus-card.png')});
+  await page.locator('.fl-focus-row__name').click();
+  await page.waitForSelector('.cc-tab.active[data-tab="tasks"]');
+  await page.evaluate(() => window.__dshFeifanLife.plugin().stores.root.mutate(d => { d.cmd.focusPins = []; }));
+  await page.locator('.fl-focus-card').getByRole('button',{name:'收起',exact:true}).click();
+  assert.equal(await page.locator('.fl-focus-ball__num').innerText(),'0');
+  results.checks.push('focus shared stores: pending count, dock drag, click expand, empty selection persists, collapse/reopen, task navigation');
   for(let run=0;run<2;run++) {
     await page.locator('.notice-container').evaluateAll(nodes=>nodes.forEach(n=>n.remove()));
     await page.locator('[data-panel="tasks"]').getByRole('button',{name:'同步到知识库',exact:true}).click();

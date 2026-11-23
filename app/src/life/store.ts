@@ -63,6 +63,11 @@ export class LifeListStore {
   private notify(): void {
     this.listeners.forEach((l) => l());
   }
+
+  /** 外部数据重载后广播，驱动所有订阅视图重渲染 */
+  notifyChanged(): void {
+    this.notify();
+  }
 }
 
 export function mergeInputs(existing: InputRecord[], incoming: InputRecord[]): { added: number; skipped: number } {

@@ -24,10 +24,23 @@ export class RootStore {
   private dirty = false;
   private writeChain: Promise<void> = Promise.resolve();
   private waiters: Array<{ resolve: () => void; reject: (reason: unknown) => void }> = [];
+  /** 本进程最近一次读/写主数据时的文件 mtime（外部变更检测基准） */
+  lastMtime = 0;
+  private reloading = false;
 
   constructor(private plugin: Plugin) {}
 
   private adapter() { return this.plugin.app.vault.adapter; }
+
+  /** 记录主数据文件当前 mtime */
+  private async touchMtime(): Promise<void> {
+    try {
+      const st = await this.adapter().stat(PRIMARY_DATA_PATH);
+      if (st) this.lastMtime = st.mtime;
+    } catch (error) {
+      console.error('[非凡人生] 读取主数据 mtime 失败', error);
+    }
+  }
 
   private async ensureFolder(path: string): Promise<void> {
     const adapter = this.adapter();
@@ -127,6 +140,7 @@ export class RootStore {
     }
 
     await this.dailyBackup();
+    await this.touchMtime();
   }
 
   /** 日度备份：每天首次加载时留存一份 data-YYYY-MM-DD.json */
@@ -214,6 +228,7 @@ export class RootStore {
       if (await adapter.exists(tempPath)) await adapter.remove(tempPath).catch(() => {});
     }
 
+    await this.touchMtime();
     await this.pruneWriteBackups();
   }
 
@@ -234,6 +249,39 @@ export class RootStore {
       await this.writeChain;
     }
     await this.writeChain;
+  }
+
+  /** 磁盘上的主数据是否被本进程之外改过（AI 侧直接写入等）。本进程有未落盘改动时不判定。 */
+  async hasExternalChange(): Promise<boolean> {
+    if (this.reloading || this.dirty || this.saveTimer !== null) return false;
+    try {
+      const st = await this.adapter().stat(PRIMARY_DATA_PATH);
+      return !!st && st.mtime > this.lastMtime + 1;
+    } catch {
+      return false;
+    }
+  }
+
+  /** 从磁盘重读主数据（外部写入后的刷新入口）；返回是否真的重载了。 */
+  async reloadFromDisk(): Promise<boolean> {
+    if (this.reloading) return false;
+    this.reloading = true;
+    try {
+      await this.flush();
+      const raw = await this.readIfExists(PRIMARY_DATA_PATH);
+      if (raw == null) return false;
+      this.data = this.parseAndValidate(raw, '外部刷新重读');
+      await this.touchMtime();
+      this.notify();
+      return true;
+    } finally {
+      this.reloading = false;
+    }
+  }
+
+  /** 外部重载后广播，驱动所有订阅视图重渲染 */
+  notifyChanged(): void {
+    this.notify();
   }
 
   subscribe(fn: () => void): () => void {
@@ -339,7 +387,8 @@ export class RootStore {
     if (!['system', 'light', 'dark'].includes(this.data.settings.themeMode ?? '')) {
       this.data.settings.themeMode = 'system'; changed = true;
     }
-    if (this.data.settings.defaultTab !== 'overview') { this.data.settings.defaultTab = 'overview'; changed = true; }
+    // 默认落地页：任务（2026-11 用户要求「每次进入都在任务界面」；无 UI 入口，单向归一）。
+    if (this.data.settings.defaultTab !== 'tasks') { this.data.settings.defaultTab = 'tasks'; changed = true; }
     return changed;
   }
 }

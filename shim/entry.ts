@@ -11,13 +11,14 @@ import { installDomHelpers, buildIcon } from './dom';
 import { APP_CSS, BASE_CSS, SHELL_CSS, PORT_CSS } from './styles.generated';
 import CommandCenterPlugin from '../app/src/main';
 import { health } from './api';
+import { mountFocusBar } from './focus-bar';
 
 export const inject = ['slots', 'locale', 'layout'];
 
 const MANIFEST = {
   id: 'feifan-life',
   name: '非凡人生',
-  version: '0.2.3',
+  version: '0.3.0',
   minAppVersion: '1.14.5',
   description: '非凡人生 · 任务 / 规划 / 财务 / 清单 / 习惯 / 灵感 / 复盘',
   author: '非凡',
@@ -27,6 +28,7 @@ const MANIFEST = {
 interface HostLayout { selectPanel(id: string | null): void; }
 let layout: HostLayout;
 let resolveMount: (() => void) | null = null;
+let focusBarDispose: (() => void) | null = null;
 
 interface ShellState {
   overlay: HTMLElement | null;
@@ -38,6 +40,7 @@ interface ShellState {
   plugin: CommandCenterPlugin | null;
   booting: Promise<void> | null;
   booted: boolean;
+  indexed: boolean;
   open: boolean;
   locale: 'zh' | 'en';
   themeObserver: MutationObserver | null;
@@ -53,6 +56,7 @@ const state: ShellState = {
   plugin: null,
   booting: null,
   booted: false,
+  indexed: false,
   open: false,
   locale: 'zh',
   themeObserver: null,
@@ -73,6 +77,30 @@ const COPY = {
     failed: '非凡人生启动失败',
     retry: '重试',
     apiMissing: '未找到宿主文件接口（/dsh-feifan-life/api）。请确认插件已安装并重载页面。',
+    focusRemaining: '剩余 {n} 项',
+    focusGroupCount: '{n} 组任务',
+    focusPreviewHint: '点击名称查看任务',
+    focusPickHint: '勾选要展示的未完成项',
+    focusNoneSelected: '还未选择要悬浮的任务，点「选择」添加。',
+    focusOpenTask: '查看任务',
+    focusRetry: '重试',
+    focusPopoutFailed: '系统悬浮窗打开失败',
+    focusPopoutUnsupported: '当前平台尚不支持系统置顶小窗；macOS 桌面端可用。',
+    focusBar: '今日聚焦',
+    focusExpand: '展开今日聚焦',
+    focusCollapse: '收起',
+    focusPopout: '悬浮到其他软件上方',
+    focusComplete: '完成',
+    focusDone: '已完成（去任务页可取消）',
+    focusRemove: '移出今日聚焦',
+    focusEmpty: '今天的聚焦已清空。可以去任务页添加新的未完成任务。',
+    focusDragHint: '可拖动，松手自动贴边',
+    focusPick: '选择',
+    focusPickTitle: '选择悬浮的聚焦',
+    focusPickDone: '完成',
+    focusPickGuide: '聚焦有点多？点「选择」挑出今天最重要的几件，只让它们悬浮',
+    focusPickOne: '在悬浮窗显示',
+    focusUnpick: '不在悬浮窗显示',
   },
   en: {
     welcome: 'Loading Feifan Life…',
@@ -88,6 +116,30 @@ const COPY = {
     failed: 'Feifan Life failed to start',
     retry: 'Retry',
     apiMissing: 'Host filesystem API missing (/dsh-feifan-life/api). Reinstall the plugin and reload the page.',
+    focusRemaining: '{n} remaining',
+    focusGroupCount: '{n} task groups',
+    focusPreviewHint: 'Click a name to view its task',
+    focusPickHint: 'Select unfinished items to display',
+    focusNoneSelected: 'No items selected. Use Select to add tasks.',
+    focusOpenTask: 'View task',
+    focusRetry: 'Retry',
+    focusPopoutFailed: 'Could not open floating window',
+    focusPopoutUnsupported: 'System floating windows are available on macOS desktop.',
+    focusBar: "Today's focus",
+    focusExpand: "Expand today's focus",
+    focusCollapse: 'Collapse',
+    focusPopout: 'Pop out as always-on-top window',
+    focusComplete: 'Complete',
+    focusDone: 'Done (undo in task board)',
+    focusRemove: "Remove from today's focus",
+    focusEmpty: 'No unfinished focus. Pin another task from the task board.',
+    focusDragHint: 'Drag to any edge',
+    focusPick: 'Select',
+    focusPickTitle: 'Pick what floats',
+    focusPickDone: 'Done',
+    focusPickGuide: 'Too many pins? Pick the few that matter today and float only those',
+    focusPickOne: 'Show in floating card',
+    focusUnpick: 'Hide from floating card',
   },
 } as const;
 
@@ -169,6 +221,12 @@ function ensureOverlay(host: HTMLElement): HTMLElement {
   host.appendChild(overlay);
   state.overlay = overlay;
   state.stage = stage;
+  // 悬浮条可能已在面板打开前完成轻量启动，那时 mountTarget 还是 null；
+  // stage 一就位就回写，保证之后 activate 的 leaf 有地方挂。
+  if (state.app) {
+    state.app.mountTarget = stage;
+    state.app.workspace.mountTarget = stage;
+  }
   state.status = status;
   state.loading = loading;
   state.error = error;
@@ -237,11 +295,14 @@ function syncTheme(): void {
 
 /* ------------------------------------------------------------------- boot */
 
-async function boot(): Promise<void> {
+/**
+ * 轻量启动：只拉起 stores（读 data.json），不做全库文件索引。
+ * 全局聚焦悬浮条在面板未打开时就用它拿到数据；打开面板时 boot() 再补索引。
+ */
+async function bootStores(): Promise<void> {
   if (state.booted) return;
   if (state.booting) return state.booting;
   state.booting = (async () => {
-    showLoading(t('indexing'));
     const app = new App();
     app.mountTarget = state.stage;
     app.workspace.mountTarget = state.stage;
@@ -250,16 +311,10 @@ async function boot(): Promise<void> {
       window.setTimeout(() => hideLoading(), 30);
     };
     state.app = app;
-    await app.vault.ensureIndex((phase) => setStatus(phase));
-    setStatus(t('loading'));
-    showLoading(t('loading'));
     const plugin = new CommandCenterPlugin(app as never, MANIFEST as never);
     state.plugin = plugin;
     await plugin.onload();
     state.booted = true;
-    setStatus('');
-    const settings = (plugin as unknown as { stores: { root: { data: { settings: Record<string, string> } } } }).stores.root.data.settings;
-    await app.vault.warmMarkdown(settings.mirrorPath || '02-任务看板');
     syncTheme();
   })();
   try {
@@ -271,7 +326,22 @@ async function boot(): Promise<void> {
   }
 }
 
-async function openApp(tab = 'overview'): Promise<void> {
+async function boot(): Promise<void> {
+  await bootStores();
+  if (state.indexed) return;
+  state.indexed = true;
+  const app = state.app!;
+  showLoading(t('indexing'));
+  await app.vault.ensureIndex((phase) => setStatus(phase));
+  setStatus(t('loading'));
+  showLoading(t('loading'));
+  const settings = (state.plugin as unknown as { stores: { root: { data: { settings: Record<string, string> } } } }).stores.root.data.settings;
+  await app.vault.warmMarkdown(settings.mirrorPath || '02-任务看板');
+  setStatus('');
+  syncTheme();
+}
+
+async function openApp(tab = 'tasks'): Promise<void> {
   if (!state.overlay?.isConnected) {
     const mounted = new Promise<void>(resolve => { resolveMount = resolve; });
     layout.selectPanel('feifan-life');
@@ -361,6 +431,40 @@ function makeSlotComponent(React: { createElement: (...args: unknown[]) => unkno
   };
 }
 
+/**
+ * 全局悬浮条的 React 壳：ref 一挂上就把悬浮条 mount 进 shell.overlay 的宿主 div，
+ * 卸载时调用 mountFocusBar 返回的 dispose。数据走 bootStores（轻量启动，不索引全库）。
+ */
+function makeFocusSlotComponent(React: { createElement: (...args: unknown[]) => unknown }): unknown {
+  // Stable ref: React rerenders must not dispose/recreate the floating widget.
+  const ref = (host: HTMLElement | null): void => {
+      if (!host) {
+        focusBarDispose?.();
+        focusBarDispose = null;
+        return;
+      }
+      if (focusBarDispose) return;
+      focusBarDispose = mountFocusBar(host, {
+        ensureBooted: () => bootStores(),
+        getPlugin: () => state.plugin,
+        openTask: (taskId, subtaskId) => {
+          void openApp('tasks').then(() => {
+            const view = (state.plugin as unknown as { activeView: { revealFocusItem?: (id: string, sub?: string) => void } | null })?.activeView;
+            view?.revealFocusItem?.(taskId, subtaskId);
+          });
+        },
+        t: (key) => t(key as keyof (typeof COPY)['zh']),
+      });
+    };
+  return function FeifanLifeFocusSlot() {
+    return React.createElement('div', {
+      className: 'fl-focus-slot',
+      'data-fl-slot': 'feifan-life-focusbar',
+      ref,
+    });
+  };
+}
+
 /** DSH supplies the native row, selection state, label and click handling. */
 function makePanelIcon(React: { createElement: (...args: unknown[]) => unknown }, props: { size?: number }): unknown {
   const size = props.size ?? 16;
@@ -420,12 +524,21 @@ export function apply(ctx: {
     } catch (error) {
       console.warn('[feifan-life] launcher registration failed', error);
     }
+    // 全局「今日聚焦」悬浮条：挂在框架级悬浮层，离开面板也一直可见。
+    const focusSlot = makeFocusSlotComponent(React);
+    try {
+      ctx.slots.inject('shell.overlay', () =>
+        ctx.slots.register({ name: 'shell.overlay', id: 'feifan-life.focusbar', order: 55, label: () => t('focusBar') }, focusSlot),
+      );
+    } catch (error) {
+      console.warn('[feifan-life] focus bar registration failed', error);
+    }
   } else {
     console.error('[feifan-life] React is not reachable from the client module table');
   }
 
   const handle = {
-    version: '0.2.3',
+    version: '0.3.0',
     open: (tab?: string) => openApp(tab),
     close: closeApp,
     reload: () => reloadData(),
@@ -458,6 +571,9 @@ export function apply(ctx: {
     state.plugin = null;
     state.booted = false;
     state.booting = null;
+    state.indexed = false;
+    focusBarDispose?.();
+    focusBarDispose = null;
     document.querySelector('style[data-fl-styles]')?.remove();
     delete (window as unknown as { __dshFeifanLife?: unknown }).__dshFeifanLife;
   };

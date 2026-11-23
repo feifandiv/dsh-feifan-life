@@ -1,7 +1,8 @@
 {
   "meta": {
     "title": "Feifan Life",
-    "description": "A full port of the Obsidian plugin 非凡人生: tasks, projects, planning, finance ledger, lists and inventory, habit check-ins, an inspiration library and reviews, with the original interface. Data lives in 08-系统/09非凡人生数据."
+    "description": "A full port of the Obsidian plugin 非凡人生: tasks, projects, planning, finance ledger, lists and inventory, habit check-ins, an inspiration library and reviews, with the original interface. Data lives in 08-系统/09非凡人生数据.",
+    "detail": "The Obsidian plugin 非凡人生, fully ported into DSH: task and project boards, yearly planning, finance ledger, lists and inventory, habit check-ins, inspiration library and reviews, with the original interface. Data stays local (08-系统/09非凡人生数据 by default) and auto-refreshes after external writes. Ships a Today-Focus floating ball: drag to any screen edge, curate which unfinished items float, and pop out a native macOS always-on-top window that stays above every app and jumps back to the task in DSH."
   },
   "launcher": {
     "title": "Feifan Life",

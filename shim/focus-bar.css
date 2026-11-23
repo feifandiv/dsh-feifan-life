@@ -1,0 +1,46 @@
+/* Compact desktop reminder. Shared host tokens keep it part of 非凡人生. */
+.fl-focus-root { pointer-events:none; font-family:var(--ff-font,-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif); }
+.fl-focus-root button { appearance:none; font-family:inherit; -webkit-app-region:no-drag; box-shadow:none; text-transform:none; letter-spacing:normal; }
+.fl-focus-root button:focus-visible,.fl-pip-body button:focus-visible { outline:2px solid var(--ff-focus,#c96442); outline-offset:1px; }
+.fl-focus-root .fl-focus-ball { position:fixed; width:44px; height:44px; box-sizing:border-box; display:flex; flex-direction:column; gap:0; align-items:center; justify-content:center; padding:4px; border:1px solid var(--ff-border,#e5e2d9); border-radius:14px; pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab; background:var(--ff-surface,#fff); color:var(--ff-text,#1f1e1b); box-shadow:0 3px 12px #00000012; }
+.fl-focus-ball > * { pointer-events:none; }
+.fl-focus-ball svg { color:var(--ff-selection,#c96442); width:16px; height:16px; }
+.fl-focus-root .fl-focus-ball:hover { background:var(--ff-surface-subtle,#f0eee6); }
+.fl-focus-root .fl-focus-ball.is-dragging { cursor:grabbing; box-shadow:0 5px 16px #0002; }
+.fl-focus-ball__num { font-size:10px; line-height:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+.fl-focus-card { position:fixed; width:280px; max-width:calc(100vw - 16px); max-height:min(360px,calc(100dvh - 16px)); display:flex; flex-direction:column; box-sizing:border-box; pointer-events:auto; color:var(--ff-text,#1f1e1b); background:var(--ff-surface,#fff); border:1px solid var(--ff-border,#e5e2d9); border-radius:12px; box-shadow:0 5px 20px #00000014,0 1px 3px #00000008; overflow:hidden; -webkit-app-region:no-drag; }
+.fl-focus-card__head { display:flex; align-items:center; gap:5px; padding:7px 8px 7px 12px; min-height:40px; box-sizing:border-box; flex-shrink:0; border-bottom:1px solid color-mix(in srgb,var(--ff-border) 65%,transparent); }
+.fl-focus-card__mark { display:flex; align-items:center; margin-right:1px; color:var(--ff-selection,#c96442); }
+.fl-focus-card__title { font-size:12px; font-weight:600; line-height:18px; white-space:nowrap; }
+.fl-focus-card__num { flex:1; font-size:10px; color:var(--ff-text-secondary,#6b6a63); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.fl-focus-card__summary { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.fl-focus-card.is-selecting .fl-focus-card__summary { position:static; width:auto; height:auto; clip-path:none; white-space:normal; padding:7px 12px 0; font-size:11px; line-height:16px; color:var(--ff-text-secondary,#6b6a63); }
+.fl-focus-root .fl-focus-card__btn,.fl-focus-root .fl-focus-card__iconbtn { display:inline-flex; align-items:center; justify-content:center; min-height:24px; height:24px; min-width:24px; box-sizing:border-box; flex-shrink:0; cursor:pointer; border:0; border-radius:5px; margin:0; padding:0 4px; font-size:11px; line-height:1; color:var(--ff-text-secondary,#6b6a63); background:transparent; }
+.fl-focus-root .fl-focus-card__btn { font-size:11px; }
+.fl-focus-root .fl-focus-card__iconbtn { width:24px; padding:0; }
+.fl-focus-card__iconbtn svg { width:14px; height:14px; }
+.fl-focus-root .fl-focus-card__btn:hover,.fl-focus-root .fl-focus-card__iconbtn:hover { color:var(--ff-text); background:var(--ff-surface-subtle,#f0eee6); }
+.fl-focus-root .fl-focus-card__iconbtn:disabled { opacity:.5; cursor:progress; }
+.fl-focus-card__list,.fl-pip-list { min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:5px 10px 7px; display:flex; flex-direction:column; gap:0; }
+.fl-focus-card__empty { padding:18px 6px; color:var(--ff-text-secondary,#6b6a63); text-align:center; font-size:12px; }
+.fl-focus-group { flex-shrink:0; padding:4px 0; }
+.fl-focus-group + .fl-focus-group { border-top:1px solid color-mix(in srgb,var(--ff-border) 65%,transparent); }
+.fl-focus-group__head { display:flex; align-items:center; gap:6px; padding:0 2px; min-height:28px; }
+.fl-focus-group__head > .fl-focus-row { padding:0; flex:1; min-width:0; }
+.fl-focus-group__children { margin:0 2px 2px 8px; border-left:1px solid var(--ff-border,#e5e2d9); padding-left:9px; }
+.fl-focus-row { display:flex; align-items:center; gap:6px; padding:0; min-height:27px; box-sizing:border-box; }
+.fl-focus-root .fl-focus-row__name { display:block; flex:1; min-width:0; min-height:26px; height:auto; margin:0; border:0; border-radius:4px; background:transparent; box-shadow:none; color:inherit; font-family:inherit; font-size:13px; font-weight:500; line-height:19px; text-align:left; padding:3px 2px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fl-focus-group__children .fl-focus-row__name { font-size:12px; font-weight:400; color:var(--ff-text-secondary,#6b6a63); }
+.fl-focus-root .fl-focus-row__name:hover { background:var(--ff-surface-subtle,#f0eee6); color:var(--ff-text); }
+.fl-focus-row__prog { flex-shrink:0; max-width:72px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ff-text-secondary,#6b6a63); font-size:10px; font-variant-numeric:tabular-nums; }
+.fl-focus-row__pri { flex-shrink:0; font-size:9px; line-height:16px; font-weight:500; padding:0 4px; border-radius:4px; color:var(--ff-text-secondary,#6b6a63); }
+.fl-focus-row__pri.pri-p0 { color:var(--ff-danger,#c64e45); background:var(--ff-danger-soft,#c64e4510); }
+.fl-focus-row__pri.pri-p1 { color:var(--ff-warning,#b78033); }
+.fl-focus-root .fl-pick-toggle { flex-shrink:0; display:grid; place-items:center; width:22px; min-width:22px; height:22px; min-height:22px; margin:0; padding:0; border:1px solid var(--ff-border-control,#d8d4c9); border-radius:5px; background:transparent; color:inherit; font-size:12px; cursor:pointer; }
+.fl-focus-root .fl-pick-toggle[aria-checked="true"] { background:var(--ff-action,#1f1e1b); border-color:var(--ff-action,#1f1e1b); color:var(--ff-on-action,#fff); }
+.fl-focus-error { display:flex; align-items:center; gap:6px; padding:8px 12px; font-size:11px; color:var(--ff-danger,#c64e45); border-bottom:1px solid var(--ff-border,#e5e2d9); }
+.fl-focus-error span { flex:1; overflow-wrap:anywhere; }
+.fl-pip-body { margin:0; color:var(--ff-text,#1f1e1b); background:var(--ff-surface,#fff); font:13px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif; }
+.fl-pip-title { padding:9px 12px; font-size:12px; font-weight:600; border-bottom:1px solid var(--ff-border,#e5e2d9); }
+.fl-pip-body .fl-focus-row__name { flex:1; min-width:0; border:0; border-radius:4px; background:transparent; color:inherit; text-align:left; font:inherit; padding:3px 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+@media (prefers-reduced-motion:no-preference) { .fl-focus-ball { transition:background .12s,box-shadow .12s; } }

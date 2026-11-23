@@ -241,6 +241,11 @@ export class FinanceStore {
     this.listeners.forEach((l) => l());
   }
 
+  /** 外部数据重载后广播，驱动所有订阅视图重渲染 */
+  notifyChanged(): void {
+    this.notify();
+  }
+
   // 通知不等待磁盘；调用方仍可 await 完整的保存与回读校验。
   async mutate(fn: (d: FinanceData) => void): Promise<void> {
     const canonical = this.canonicalInventory();

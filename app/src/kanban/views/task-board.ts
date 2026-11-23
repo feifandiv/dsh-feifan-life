@@ -425,9 +425,11 @@ export function revealTaskInBoard(
   taskId: string,
   subtaskId?: string,
 ): void {
-  taskFilter = { projectId: 'all', priority: 'all' };
-  expanded.add(taskId);
+  // 从「今日聚焦」/搜索跳转定位时，项目筛选定到该任务所在分组（游离任务 → __none__），
+  // 不再重置成「全部项目」；项目已被删除时 renderTaskBoard 会兜底回「全部」。
   const task = plugin.store.getTasks().find((item: Task) => item.id === taskId) as Task | undefined;
+  taskFilter = { projectId: task?.projectId ?? '__none__', priority: 'all' };
+  expanded.add(taskId);
   if (task?.archived) {
     revealedArchivedTaskId = task.id;
     archivedExpanded = true;
